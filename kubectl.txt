@@ -1,0 +1,21 @@
+minikube start -p DemoCluster
+kubectl create -f rbac-config.yaml
+helm init --service-account tiller
+helm repo update
+helm install --name my-release stable/cockroachdb
+kubectl run cockroachdb -it --image=cockroachdb/cockroach:v19.1.4 --rm --restart=Never -- sql --insecure --host=my-release-cockroachdb-public
+
+kubectl port-forward my-release-cockroachdb-0 26257:26257
+kubectl port-forward my-release-cockroachdb-0 8080
+
+troubleshoot:
+cockroach sql --insecure --host=localhost --user=maxroach --port=26257 --execute="SHOW DATABASES;"
+
+kubectl get all --all-namespaces
+
+kubectl delete pod my-release-cockroachdb-0
+
+kubectl get pods -o wide
+
+roach
+Q7gc8rEdS
