@@ -1,0 +1,6 @@
+object Processor {
+
+  def processRequest() = {
+
+  }
+}
