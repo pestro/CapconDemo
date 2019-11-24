@@ -13,17 +13,17 @@ object DBConnector {
   type Account = String :: Long :: HNil
 
   def main(args: Array[String]): Unit = {
-    firstFive
-  }
+    import DemoFragment._
 
-  def firstFive = {
-    sql"select id, balance from bank.accounts"
-      .query[Account]    // Query0[String]
-      .stream           // Stream[ConnectionIO, String]
-      .take(5)          // Stream[ConnectionIO, String]
-      .compile.toList   // ConnectionIO[List[String]]
-      .transact(xa)     // IO[List[String]]
-      .unsafeRunSync    // List[String]
+    //Fragment.const(obj)
+
+    (Select.accounts ++ Where.balance(400))
+      .query[Account]
+      .stream
+      .compile
+      .toList
+      .transact(xa)
+      .unsafeRunSync
       .foreach(println)
   }
 }
