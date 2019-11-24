@@ -1,12 +1,18 @@
 import doobie.implicits._
+import doobie.Fragment.const
 
 object DemoFragment {
 
   object Select {
-    def accounts = fr"select id, balance from bank.accounts";
+    def accounts(table: String) = fr"select id, name, balance from" ++ const { table };
   }
 
   object Where {
-    def balance(greaterThan: Double) = fr"where balance > $greaterThan"
+
+    def balance(greaterThan: Option[Double]) =
+      greaterThan.map { value => fr"balance > $value" }
+
+    def typeOf(typeOf: Option[String]) =
+      typeOf.map { value => fr"type = $value" }
   }
 }
