@@ -4,7 +4,8 @@ import doobie.Fragment.const
 object DemoFragment {
 
   object Select {
-    def accounts(table: String) = fr"select id, type, balance from" ++ const { table };
+    def accountSummaries(table: String) = fr"select type, balance from" ++ const { table };
+    def accountDetails(table: String) = fr"select id, name, type, balance from" ++ const { table };
   }
 
   object Where {

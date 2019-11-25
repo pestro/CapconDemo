@@ -11,51 +11,49 @@ import ConnectionIOExecutor._
 import Mapper._
 
 object DBConnector {
+  import Data._
 
-  type Account = String :: String :: Long :: HNil
-
-  sealed case class Level(code: String) {
-    def encode = s"[[ $code ]]"
-  }
-
-  def mapTypeToLevel(typeOf: String) = Level(typeOf)
+  type AccountSummary = Rank :: Balance :: HNil
+  type AccountDetails = Id :: Name :: Rank :: Balance :: HNil
 
   def main(args: Array[String]): Unit = {
     for {
-      dbRes <- query(Some(400), Some("Emperor"))
+      dbRes <- querySummary(Some(400), Some("Emperor"))
       mappedRes <-  Option {
-        mapType(dbRes) { mapTypeToLevel }
+        dbRes map { encoder }
       }
     } yield println(mappedRes)
 
     for {
-     dbRes <- query(Some(400), None)
+     dbRes <- queryDetails(Some(400), None)
      mappedRes <- Option {
-       mapType(dbRes) { mapTypeToLevel }
+       dbRes map { encoder }
      }
     } yield println(mappedRes)
 
   }
 
 
-  def query(balanceGreaterThan: Option[Double], typeOfAccount: Option[String]) = {
-    val query = queryAccount(db = "bank", balanceGreaterThan, typeOfAccount)
-
-    val compiledStream = query
-      .stream
-      .compile
-      .toList
-
-    executeQuery[List[Account]] { compiledStream }
+  def querySummary(balanceGreaterThan: Option[Double], typeOfAccount: Option[String]) = {
+    val query = fragment(Select.accountSummaries("bank.accounts"), balanceGreaterThan, typeOfAccount)
+      .query[AccountSummary]
+    val compiledStream = query.stream.compile.toList
+    executeQuery[List[AccountSummary]] { compiledStream }
   }
 
-  def queryAccount(db: String, balanceGreaterThan: Option[Double], typeOfAccount: Option[String]) = {
+  def queryDetails(balanceGreaterThan: Option[Double], typeOfAccount: Option[String]) = {
+    val query = fragment(Select.accountDetails("bank.accounts"), balanceGreaterThan, typeOfAccount)
+      .query[AccountDetails]
+    val compiledStream = query.stream.compile.toList
+    executeQuery[List[AccountDetails]] { compiledStream }
+  }
+
+  def fragment(selectFragment: Fragment, balanceGreaterThan: Option[Double], typeOfAccount: Option[String]) = {
     (
-      Select.accounts(s"$db.accounts") ++ whereAndOpt(
+      selectFragment ++ whereAndOpt(
         Where.balance(greaterThan = balanceGreaterThan),
         Where.typeOf(typeOf = typeOfAccount)
       )
     )
-    .query[Account]
   }
 }
